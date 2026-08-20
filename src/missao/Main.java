@@ -61,7 +61,8 @@ public class Main {
         System.out.println(" - c: embarcar passageiro na posição atual");
         System.out.println(" - q: sair do jogo");
         System.out.println();
-        System.out.println("Pontuação inicial: 20 pontos. Cada movimento custa 1 ponto. Cada embarque vale +10 pontos.");
+        System.out.println("Pontuação inicial: 20 pontos. Cada movimento custa 1 ponto.");
+        System.out.println("Bônus de embarque: Professor +10, Engenheiro +15, Astronauta +20.");
         System.out.println();
         System.out.println("Pressione Enter para iniciar a missão...");
         scanner.nextLine();
@@ -94,20 +95,26 @@ public class Main {
                     case 'a': nave.moveLeft(); score--; break;
                     case 'd': nave.moveRight(); score--; break;
                     case 'c': {
-                        Passageiro p = missao.passagemNaPosicao();
-                        if (p == null) {
-                            System.out.println("Nenhum passageiro nesta posição.");
-                        } else {
-                            boolean ok = missao.embarcarPassageiroNaPosicao();
-                            if (ok) {
-                                score += 10;
-                                System.out.println("Passageiro embarcado. +10 pontos!");
+                            Passageiro p = missao.passagemNaPosicao();
+
+                            if (p == null) {
+                                System.out.println("Nenhum passageiro nesta posição.");
                             } else {
-                                System.out.println("Nave cheia, não foi possível embarcar.");
+                                boolean ok = missao.embarcarPassageiroNaPosicao();
+
+                                if (ok) {
+                                    score += p.getPontuacao();
+
+                                    System.out.println("Passageiro embarcado: " + p.getNome());
+                                    System.out.println("Tipo: " + p.getTipo());
+                                    System.out.println("+" + p.getPontuacao() + " pontos!");
+                                } else {
+                                    System.out.println("Nave cheia, não foi possível embarcar.");
+                                }
                             }
+                            break;
                         }
-                        break;
-                    }
+
                     case 'q': running = false; break;
                     default: System.out.println("Comando desconhecido.");
                 }
@@ -163,7 +170,7 @@ public class Main {
     }
 
     private static Missao criarNovaMissao(Random random, int minX, int maxX, int minY, int maxY) {
-        Nave nave = new Nave("A-1", 3);
+        Nave nave = new Nave("A-1", 5);
         Missao missao = new Missao(nave);
 
         while (missao.getPassageiros().size() < 3) {
@@ -172,7 +179,7 @@ public class Main {
             if (x == nave.getX() && y == nave.getY()) continue;
             if (posicaoOcupada(missao, x, y)) continue;
             if (missao.getPassageiros().isEmpty()) {
-                missao.addPassageiro(new Professor("Dr. Silva", x, y));
+                missao.addPassageiro(new Astronauta("Dr. vinicios", x, y));
             } else if (missao.getPassageiros().size() == 1) {
                 missao.addPassageiro(new Engenheiro("Eng. Rosa", x, y));
             } else {
@@ -221,7 +228,7 @@ public class Main {
             for (int x = minX; x <= maxX; x++) {
                 char symbol = '.';
                 if (missao.getNave().getX() == x && missao.getNave().getY() == y) {
-                    symbol = 'N';
+                    symbol = '@';
                 } else {
                     for (Passageiro p : missao.getPassageiros()) {
                         if (p.getX() == x && p.getY() == y) {
@@ -236,7 +243,7 @@ public class Main {
                     if (symbol == '.') {
                         for (Asteroide a : missao.getAsteroides()) {
                             if (a.getX() == x && a.getY() == y) {
-                                symbol = 'A';
+                                symbol = '#';
                                 break;
                             }
                         }

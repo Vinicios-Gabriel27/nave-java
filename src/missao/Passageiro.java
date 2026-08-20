@@ -17,4 +17,10 @@ public class Passageiro {
     public String getTipo() { return tipo; }
     public int getX() { return x; }
     public int getY() { return y; }
+
+
+    public int getPontuacao() {
+        return 10;  // Default
+    }
+
 }
