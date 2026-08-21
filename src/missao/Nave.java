@@ -5,19 +5,22 @@ import java.util.List;
 
 public class Nave {
     private String id;
+    private int vidas;
     private int x;
     private int y;
     private int capacidade;
     private List<Passageiro> passageiros = new ArrayList<>();
 
-    public Nave(String id, int capacidade) {
+    public Nave(String id, int capacidade, int vidas) {
         this.id = id;
+        this.vidas = vidas;
         this.capacidade = capacidade;
         this.x = 0;
         this.y = 0;
     }
 
     public String getId() { return id; }
+    public int getVidas(){return vidas;}
     public int getX() { return x; }
     public int getY() { return y; }
     public int getCapacidade() { return capacidade; }
@@ -34,5 +37,14 @@ public class Nave {
             return true;
         }
         return false;
+    }
+    public void perderVida() {
+        if (vidas > 0) {
+            vidas--;
+        }
+    }
+    public void reposicionar(int x, int y) {
+        this.x = x;
+        this.y = y;
     }
 }

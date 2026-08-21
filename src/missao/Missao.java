@@ -25,8 +25,13 @@ public class Missao {
         return asteroides;
     }
 
-    public void addPassageiro(Passageiro p) { passageiros.add(p); }
-    public void addAsteroide(Asteroide a) { asteroides.add(a); }
+    public void addPassageiro(Passageiro p) {
+        passageiros.add(p);
+    }
+
+    public void addAsteroide(Asteroide a) {
+        asteroides.add(a);
+    }
 
     public boolean verificaColisao() {
         for (Asteroide a : asteroides) {
@@ -55,5 +60,9 @@ public class Missao {
         return false;
     }
 
-    public boolean todosEmbarcados() { return passageiros.isEmpty(); }
+    public boolean todosEmbarcados() {
+        return passageiros.isEmpty();
+    }
+
 }
+
