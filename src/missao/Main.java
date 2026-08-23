@@ -42,7 +42,7 @@ public class Main {
                 System.out.printf(" %d. %s: %d pontos%n", i + 1, entry.name, entry.score);
             }
         }
-                
+
         System.out.println();
         System.out.println("Bem-vindo à Missão Marte Unifor! Sua nave foi selecionada para uma expedição de resgate e pesquisa na superfície marciana.");
         System.out.println("Seu objetivo é localizar e embarcar todos os passageiros necessários para completar a missão antes que o seu tempo (pontuação) chegue a zero.");
@@ -68,11 +68,13 @@ public class Main {
         scanner.nextLine();
         System.out.println("================================================================");
 
+        Dificuldade dificuldade = selecionarDificuldade(scanner);
+
         boolean playAgain = true;
         while (playAgain) {
-            Missao missao = criarNovaMissao(random, minX, maxX, minY, maxY);
+            Missao missao = criarNovaMissao(random, minX, maxX, minY, maxY, dificuldade);
             Nave nave = missao.getNave();
-            int score = 20;
+            int score = definirPontuacaoInicial(dificuldade);
             boolean running = true;
 
             while (running) {
@@ -80,9 +82,11 @@ public class Main {
                 System.out.printf("Nave em (%d,%d) | Pontos: %d | Passageiros a bordo: %d | Passageiros restantes: %d\n",
                         nave.getX(), nave.getY(), score, nave.getPassageiros().size(), missao.todosEmbarcados() ? 0 : missao.getPassageiros().size());
 
-                if (missao.verificaColisao()) {
-                    System.out.println("Colisão com asteroide! Missão abortada.");
-                    break;
+
+                Passageiro passageiroAqui = missao.passagemNaPosicao();
+                if (passageiroAqui != null) {
+                    System.out.printf(">> Passageiro %s (%s) aqui! Pressione 'c' para embarcar.%n",
+                            passageiroAqui.getNome(), passageiroAqui.getTipo());
                 }
 
                 System.out.print("Para onde ir? ");
@@ -95,30 +99,35 @@ public class Main {
                     case 'a': nave.moveLeft(); score--; break;
                     case 'd': nave.moveRight(); score--; break;
                     case 'c': {
-                            Passageiro p = missao.passagemNaPosicao();
+                        Passageiro p = missao.passagemNaPosicao();
 
-                            if (p == null) {
-                                System.out.println("Nenhum passageiro nesta posição.");
+                        if (p == null) {
+                            System.out.println("Nenhum passageiro nesta posição.");
+                        } else {
+                            boolean ok = missao.embarcarPassageiroNaPosicao();
+
+                            if (ok) {
+                                score += p.getPontuacao();
+
+                                System.out.println("Passageiro embarcado: " + p.getNome());
+                                System.out.println("Tipo: " + p.getTipo());
+                                System.out.println("+" + p.getPontuacao() + " pontos!");
                             } else {
-                                boolean ok = missao.embarcarPassageiroNaPosicao();
-
-                                if (ok) {
-                                    score += p.getPontuacao();
-
-                                    System.out.println("Passageiro embarcado: " + p.getNome());
-                                    System.out.println("Tipo: " + p.getTipo());
-                                    System.out.println("+" + p.getPontuacao() + " pontos!");
-                                } else {
-                                    System.out.println("Nave cheia, não foi possível embarcar.");
-                                }
+                                System.out.println("Nave cheia, não foi possível embarcar.");
                             }
-                            break;
                         }
+                        break;
+                    }
 
                     case 'q': running = false; break;
                     default: System.out.println("Comando desconhecido.");
                 }
+                missao.moverInimigos(random, minX, maxX, minY, maxY);
 
+                if (missao.verificaColisao()) {
+                    System.out.println("Colisão! Missão abortada.");
+                    break;
+                }
                 if (score <= 0) {
                     System.out.println("Pontuação zerada. Missão perdida.");
                     break;
@@ -169,11 +178,54 @@ public class Main {
         }
     }
 
-    private static Missao criarNovaMissao(Random random, int minX, int maxX, int minY, int maxY) {
+    private static Dificuldade selecionarDificuldade(Scanner scanner) {
+        System.out.println();
+        System.out.println("Escolha a dificuldade:");
+        System.out.println(" 1. Fácil   (5 asteroides, 30 pontos, 5 passageiros)");
+        System.out.println(" 2. Normal  (3 asteroides, 20 pontos, 3 passageiros)");
+        System.out.println(" 3. Difícil (6 asteroides, 15 pontos, 4 passageiros)");
+        System.out.print("Opção: ");
+        String opcao = scanner.nextLine().trim();
+
+        switch (opcao) {
+            case "1": return Dificuldade.FACIL;
+            case "3": return Dificuldade.DIFICIL;
+            default: return Dificuldade.NORMAL;
+        }
+    }
+
+    private static int definirPontuacaoInicial(Dificuldade dificuldade) {
+        switch (dificuldade) {
+            case FACIL: return 30;
+            case DIFICIL: return 15;
+            default: return 20;
+        }
+    }
+
+    private static int definirQtdPassageiros(Dificuldade dificuldade) {
+        switch (dificuldade) {
+            case FACIL: return 5;
+            case DIFICIL: return 4;
+            default: return 3;
+        }
+    }
+
+    private static int definirQtdAsteroides(Dificuldade dificuldade) {
+        switch (dificuldade) {
+            case FACIL: return 5;
+            case DIFICIL: return 6;
+            default: return 3;
+        }
+    }
+
+    private static Missao criarNovaMissao(Random random, int minX, int maxX, int minY, int maxY, Dificuldade dificuldade) {
         Nave nave = new Nave("A-1", 5);
         Missao missao = new Missao(nave);
 
-        while (missao.getPassageiros().size() < 3) {
+        int qtdPassageiros = definirQtdPassageiros(dificuldade);
+        int qtdAsteroides = definirQtdAsteroides(dificuldade);
+
+        while (missao.getPassageiros().size() < qtdPassageiros) {
             int x = random.nextInt(maxX - minX + 1) + minX;
             int y = random.nextInt(maxY - minY + 1) + minY;
             if (x == nave.getX() && y == nave.getY()) continue;
@@ -187,12 +239,21 @@ public class Main {
             }
         }
 
-        while (missao.getAsteroides().size() < 2) {
+        while (missao.getAsteroides().size() < qtdAsteroides) {
             int x = random.nextInt(maxX - minX + 1) + minX;
             int y = random.nextInt(maxY - minY + 1) + minY;
             if (x == nave.getX() && y == nave.getY()) continue;
             if (posicaoOcupada(missao, x, y)) continue;
             missao.addAsteroide(new Asteroide(x, y));
+        }
+
+
+        while (missao.getInimigos().size() < 2) {
+            int x = random.nextInt(maxX - minX + 1) + minX;
+            int y = random.nextInt(maxY - minY + 1) + minY;
+            if (x == nave.getX() && y == nave.getY()) continue;
+            if (posicaoOcupada(missao, x, y)) continue;
+            missao.addInimigo(new Inimigo(x, y));
         }
 
         return missao;
@@ -205,6 +266,10 @@ public class Main {
         }
         for (Asteroide a : missao.getAsteroides()) {
             if (a.getX() == x && a.getY() == y) return true;
+        }
+
+        for (Inimigo i : missao.getInimigos()) {
+            if (i.getX() == x && i.getY() == y) return true;
         }
         return false;
     }
@@ -249,12 +314,20 @@ public class Main {
                         }
                     }
                 }
+                if (symbol == '.') {
+                    for (Inimigo i : missao.getInimigos()) {
+                        if (i.getX() == x && i.getY() == y) {
+                            symbol = 'X';
+                            break;
+                        }
+                    }
+                }
                 System.out.printf(" %2c", symbol);
             }
             System.out.println();
         }
 
-        System.out.println("Legenda: N=Nave, P=Professor, E=Engenheiro, A=Asteroide, .=Vazio");
+        System.out.println("Legenda: N=Nave, P=Professor, E=Engenheiro, A=Asteroide, X=Inimigo, .=Vazio");
         System.out.println("Resumo de comandos: w(cima)/s(baixo)/a(esquerda)/d(direita) mover, c embarcar, q sair");
         System.out.println("Passageiros restantes:");
         for (Passageiro p : missao.getPassageiros()) {
