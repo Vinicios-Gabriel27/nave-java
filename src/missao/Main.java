@@ -319,13 +319,13 @@ public class Main {
         System.out.println();
         System.out.println("Escolha a dificuldade:");
         System.out.println(
-                " 1. Fácil   (5 asteroides, 30 pontos, 5 passageiros)"
+                " 1. Fácil   (3 asteroides, 30 pontos, 2 passageiros)"
         );
         System.out.println(
-                " 2. Normal  (3 asteroides, 20 pontos, 3 passageiros)"
+                " 2. Normal  (5 asteroides, 20 pontos, 6 passageiros)"
         );
         System.out.println(
-                " 3. Difícil (6 asteroides, 15 pontos, 4 passageiros)"
+                " 3. Difícil (8 asteroides, 15 pontos, 9 passageiros)"
         );
         System.out.print("Opção: ");
 
@@ -364,13 +364,13 @@ public class Main {
 
         switch (dificuldade) {
             case FACIL:
-                return 5;
+                return 2;
 
             case DIFICIL:
-                return 4;
+                return 9;
 
             default:
-                return 3;
+                return 6;
         }
     }
 
@@ -379,13 +379,13 @@ public class Main {
 
         switch (dificuldade) {
             case FACIL:
-                return 5;
+                return 3;
 
             case DIFICIL:
-                return 6;
+                return 8;
 
             default:
-                return 3;
+                return 5;
         }
     }
 
