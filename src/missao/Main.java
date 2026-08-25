@@ -364,13 +364,13 @@ public class Main {
 
         switch (dificuldade) {
             case FACIL:
-                return 5;
+                return 3;
 
             case DIFICIL:
-                return 4;
+                return 5;
 
             default:
-                return 3;
+                return 4;
         }
     }
 
@@ -379,13 +379,13 @@ public class Main {
 
         switch (dificuldade) {
             case FACIL:
-                return 5;
+                return 3;
 
             case DIFICIL:
                 return 6;
 
             default:
-                return 3;
+                return 5;
         }
     }
 
