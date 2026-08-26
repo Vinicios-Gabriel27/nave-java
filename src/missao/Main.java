@@ -15,12 +15,76 @@ import java.util.stream.Collectors;
 public class Main {
     public static void main(String[] args) {
         Random random = new Random();
-
-        Path rankingPath = Paths.get("ranking.json");
+        Path rankingPath = Paths.get(System.getProperty("user.home"), ".ranking-missao-marte.json");
         List<RankingEntry> ranking = loadRanking(rankingPath);
-
         Scanner scanner = new Scanner(System.in);
 
+        boolean executando = true;
+
+        while (executando) {
+            exibirMenuInicial();
+            String opcao = scanner.nextLine().trim();
+
+            switch (opcao) {
+                case "1":
+                    iniciarNovaMissao(scanner, random, ranking, rankingPath);
+                    break;
+                case "2":
+                    System.out.println();
+                    System.out.println("=== Ranking Top 5 ===");
+                    if (ranking.isEmpty()) {
+                        System.out.println("Ainda não há pontuações registradas.");
+                    } else {
+                        printRanking(ranking);
+                    }
+                    System.out.println();
+                    System.out.println("Pressione Enter para voltar ao menu...");
+                    scanner.nextLine();
+                    break;
+                case "3":
+                    ranking.clear();
+                    saveRanking(rankingPath, ranking);
+                    System.out.println();
+                    System.out.println("Histórico de ranking resetado com sucesso!");
+                    System.out.println("Pressione Enter para voltar ao menu...");
+                    scanner.nextLine();
+                    break;
+                case "4":
+                    executando = false;
+                    System.out.println("Saindo do jogo. Até a próxima missão!");
+                    break;
+                default:
+                    System.out.println("Opção inválida. Tente novamente.");
+                    System.out.println("Pressione Enter para continuar...");
+                    scanner.nextLine();
+            }
+        }
+
+        scanner.close();
+        System.out.println("Fim da execução.");
+    }
+
+    private static void exibirMenuInicial() {
+        System.out.println();
+        System.out.println("================================================================");
+        System.out.println("       MISSÃO MARTE UNIFOR — Console");
+        System.out.println("================================================================");
+        System.out.println();
+        System.out.println("  1. Iniciar Nova Missão");
+        System.out.println("  2. Visualizar Ranking Top 5");
+        System.out.println("  3. Resetar Histórico de Ranking");
+        System.out.println("  4. Sair do Jogo");
+        System.out.println();
+        System.out.print("Escolha uma opção: ");
+    }
+
+    private static void iniciarNovaMissao(
+            Scanner scanner,
+            Random random,
+            List<RankingEntry> ranking,
+            Path rankingPath) {
+
+        System.out.println();
         System.out.print("Digite o nome do piloto: ");
         String pilotoNome = scanner.nextLine().trim();
 
@@ -36,30 +100,14 @@ public class Main {
         int minY = -tamanho;
         int maxY = tamanho;
 
+        System.out.println();
         System.out.println("================================================================");
-        System.out.println("Missão Marte Unifor — Console");
-        System.out.println();
-        System.out.println("Ranking dos melhores pilotos:");
-
-        if (ranking.isEmpty()) {
-            System.out.println(" - Ainda não há pontuações registradas.");
-        } else {
-            for (int i = 0; i < Math.min(5, ranking.size()); i++) {
-                RankingEntry entry = ranking.get(i);
-                System.out.printf(" %d. %s: %d pontos%n",
-                        i + 1, entry.name, entry.score);
-            }
-        }
-
-        System.out.println();
-        System.out.println("Bem-vindo à Missão Marte Unifor! Sua nave foi selecionada para uma expedição de resgate e pesquisa na superfície marciana.");
-        System.out.println("Seu objetivo é localizar e embarcar todos os passageiros necessários para completar a missão antes que o seu tempo (pontuação) chegue a zero.");
-        System.out.println();
         System.out.println("Objetivo:");
         System.out.println(" - Mover a nave pelo mapa");
         System.out.println(" - Encontrar e embarcar todos os passageiros");
         System.out.println(" - Evitar colisões com asteroides e inimigos");
         System.out.println(" - Manter a pontuação acima de zero");
+        System.out.println(" - Após salvar todos, retorne à Plataforma de Pouso (L) em (0,0)");
         System.out.println();
         System.out.println("Comandos:");
         System.out.println(" - w: mover para cima");
@@ -88,9 +136,9 @@ public class Main {
             );
 
             Nave nave = missao.getNave();
-
             int score = definirPontuacaoInicial(dificuldade);
             boolean running = true;
+            boolean todosEmbarcados = false;
 
             while (running) {
                 desenharMapa(
@@ -113,9 +161,13 @@ public class Main {
                         missao.todosEmbarcados() ? 0 : missao.getPassageiros().size()
                 );
 
+                if (todosEmbarcados && !(nave.getX() == 0 && nave.getY() == 0)) {
+                    System.out.println(">> Todos embarcados! Retorne à Plataforma de Pouso (L) em (0,0)!");
+                }
+
                 Passageiro passageiroAqui = missao.passagemNaPosicao();
 
-                if (passageiroAqui != null) {
+                if (passageiroAqui != null && !todosEmbarcados) {
                     System.out.printf(
                             ">> Passageiro %s (%s) aqui! Pressione 'c' para embarcar.%n",
                             passageiroAqui.getNome(),
@@ -128,6 +180,9 @@ public class Main {
 
                     if (nave.getVidas() == 0) {
                         System.out.println("Game Over!");
+                        System.out.printf("Pontuação final: %d%n", score);
+                        salvarRankingSeMerece(ranking, rankingPath, pilotoNome, score);
+                        running = false;
                         break;
                     } else {
                         System.out.println(
@@ -136,7 +191,6 @@ public class Main {
                         );
 
                         nave.reposicionar(0, 0);
-
                         System.out.println("Nave reposicionada em (0,0).");
                     }
                 }
@@ -172,32 +226,45 @@ public class Main {
                         break;
 
                     case 'c': {
-                        Passageiro p = missao.passagemNaPosicao();
-
-                        if (p == null) {
+                        if (todosEmbarcados) {
                             System.out.println(
-                                    "Nenhum passageiro nesta posição."
+                                    "Todos já estão embarcados. Retorne à plataforma de pouso!"
                             );
                         } else {
-                            boolean ok =
-                                    missao.embarcarPassageiroNaPosicao();
+                            Passageiro p = missao.passagemNaPosicao();
 
-                            if (ok) {
-                                score += p.getPontuacao();
-
+                            if (p == null) {
                                 System.out.println(
-                                        "Passageiro embarcado: " + p.getNome()
-                                );
-                                System.out.println(
-                                        "Tipo: " + p.getTipo()
-                                );
-                                System.out.println(
-                                        "+" + p.getPontuacao() + " pontos!"
+                                        "Nenhum passageiro nesta posição."
                                 );
                             } else {
-                                System.out.println(
-                                        "Nave cheia, não foi possível embarcar."
-                                );
+                                boolean ok =
+                                        missao.embarcarPassageiroNaPosicao();
+
+                                if (ok) {
+                                    score += p.getPontuacao();
+
+                                    System.out.println(
+                                            "Passageiro embarcado: " + p.getNome()
+                                    );
+                                    System.out.println(
+                                            "Tipo: " + p.getTipo()
+                                    );
+                                    System.out.println(
+                                            "+" + p.getPontuacao() + " pontos!"
+                                    );
+
+                                    if (missao.todosEmbarcados()) {
+                                        todosEmbarcados = true;
+                                        System.out.println();
+                                        System.out.println("*** Todos os passageiros foram embarcados! ***");
+                                        System.out.println("*** Agora retorne à Plataforma de Pouso (L) em (0,0)! ***");
+                                    }
+                                } else {
+                                    System.out.println(
+                                            "Nave cheia, não foi possível embarcar."
+                                    );
+                                }
                             }
                         }
 
@@ -212,6 +279,10 @@ public class Main {
                         System.out.println("Comando desconhecido.");
                 }
 
+                if (!running) {
+                    break;
+                }
+
                 missao.moverInimigos(
                         random,
                         minX,
@@ -221,49 +292,45 @@ public class Main {
                 );
 
                 if (missao.verificaColisao()) {
-                    System.out.println("Colisão! Missão abortada.");
-                    break;
+                    nave.perderVida();
+
+                    if (nave.getVidas() == 0) {
+                        System.out.println("Game Over! Vidas esgotadas.");
+                        System.out.printf("Pontuação final: %d%n", score);
+                        salvarRankingSeMerece(ranking, rankingPath, pilotoNome, score);
+                        running = false;
+                        break;
+                    } else {
+                        System.out.println(
+                                "Inimigo ou asteroide na sua posição! Vidas restantes: "
+                                        + nave.getVidas()
+                        );
+
+                        nave.reposicionar(0, 0);
+
+                        System.out.println("Nave reposicionada em (0,0).");
+                    }
                 }
 
                 if (score <= 0) {
                     System.out.println(
                             "Pontuação zerada. Missão perdida."
                     );
+                    System.out.printf("Pontuação final: %d%n", score);
+                    salvarRankingSeMerece(ranking, rankingPath, pilotoNome, score);
+                    running = false;
                     break;
                 }
 
-                if (missao.todosEmbarcados()) {
-                    System.out.println(
-                            "Todos os passageiros embarcados! Missão concluída com sucesso."
-                    );
+                if (todosEmbarcados && nave.getX() == 0 && nave.getY() == 0) {
+                    System.out.println();
+                    System.out.println("*** POUSO REALIZADO COM SUCESSO! ***");
+                    System.out.println("*** Missão concluída! Todos os passageiros foram salvos! ***");
+                    System.out.printf("*** Pontuação final: %d ***%n", score);
 
-                    System.out.printf(
-                            "Pontuação final: %d%n",
-                            score
-                    );
+                    salvarRankingSeMerece(ranking, rankingPath, pilotoNome, score);
 
-                    if (score > 0 && isTopScore(ranking, score)) {
-                        ranking.add(
-                                new RankingEntry(pilotoNome, score)
-                        );
-
-                        ranking = ranking.stream()
-                                .sorted(
-                                        Comparator.comparingInt(
-                                                (RankingEntry e) -> e.score
-                                        ).reversed()
-                                )
-                                .limit(5)
-                                .collect(Collectors.toList());
-
-                        saveRanking(rankingPath, ranking);
-
-                        System.out.println(
-                                "Novo ranking salvo! Você está entre os 5 maiores pontuadores."
-                        );
-                    }
-
-                    break;
+                    running = false;
                 }
             }
 
@@ -293,9 +360,6 @@ public class Main {
                 playAgain = false;
             }
         }
-
-        scanner.close();
-        System.out.println("Fim da execução.");
     }
 
     private static void printRanking(
@@ -313,19 +377,50 @@ public class Main {
         }
     }
 
+    private static void salvarRankingSeMerece(
+            List<RankingEntry> ranking,
+            Path rankingPath,
+            String pilotoNome,
+            int score) {
+
+        if (score > 0 && isTopScore(ranking, score)) {
+            ranking.add(
+                    new RankingEntry(pilotoNome, score)
+            );
+
+            List<RankingEntry> sorted = ranking.stream()
+                    .sorted(
+                            Comparator.comparingInt(
+                                    (RankingEntry e) -> e.score
+                            ).reversed()
+                    )
+                    .limit(5)
+                    .collect(Collectors.toList());
+
+            ranking.clear();
+            ranking.addAll(sorted);
+
+            saveRanking(rankingPath, ranking);
+
+            System.out.println(
+                    "Pontuação salva no ranking! Você está entre os 5 maiores."
+            );
+        }
+    }
+
     private static Dificuldade selecionarDificuldade(
             Scanner scanner) {
 
         System.out.println();
         System.out.println("Escolha a dificuldade:");
         System.out.println(
-                " 1. Fácil   (5 asteroides, 30 pontos, 5 passageiros)"
+                " 1. Fácil   (3 asteroides, 30 pontos, 2 passageiros)"
         );
         System.out.println(
-                " 2. Normal  (3 asteroides, 20 pontos, 3 passageiros)"
+                " 2. Normal  (5 asteroides, 20 pontos, 6 passageiros)"
         );
         System.out.println(
-                " 3. Difícil (6 asteroides, 15 pontos, 4 passageiros)"
+                " 3. Difícil (8 asteroides, 15 pontos, 9 passageiros)"
         );
         System.out.print("Opção: ");
 
@@ -382,7 +477,7 @@ public class Main {
                 return 3;
 
             case DIFICIL:
-                return 6;
+                return 8;
 
             default:
                 return 5;
@@ -579,11 +674,17 @@ public class Main {
 
                 char symbol = '.';
 
+                if (x == 0 && y == 0) {
+                    symbol = 'L';
+                }
+
                 if (missao.getNave().getX() == x
                         && missao.getNave().getY() == y) {
 
                     symbol = '@';
 
+                } else if (symbol == 'L') {
+                    // Mantém o 'L' da plataforma de pouso
                 } else {
 
                     for (Passageiro p :
@@ -641,7 +742,7 @@ public class Main {
         }
 
         System.out.println(
-                "Legenda: @=Nave, P=Professor, E=Engenheiro, A=Astronauta, #=Asteroide, X=Inimigo, .=Vazio"
+                "Legenda: @=Nave, L=Landing Pad, P=Professor, E=Engenheiro, A=Astronauta, #=Asteroide, X=Inimigo, .=Vazio"
         );
 
         System.out.println(
