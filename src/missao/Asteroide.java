@@ -9,8 +9,13 @@ public class Asteroide {
         this.y = y;
     }
 
-    public int getX() { return x; }
-    public int getY() { return y; }
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
 
     public boolean colideCom(Nave n) {
         return n.getX() == x && n.getY() == y;

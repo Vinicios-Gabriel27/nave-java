@@ -19,15 +19,15 @@ public class Missao {
         return nave;
     }
 
-    public java.util.List<Passageiro> getPassageiros() {
+    public List<Passageiro> getPassageiros() {
         return passageiros;
     }
 
-    public java.util.List<Asteroide> getAsteroides() {
+    public List<Asteroide> getAsteroides() {
         return asteroides;
     }
 
-    public java.util.List<Inimigo> getInimigos() {
+    public List<Inimigo> getInimigos() {
         return inimigos;
     }
 
@@ -45,11 +45,15 @@ public class Missao {
 
     public boolean verificaColisao() {
         for (Asteroide a : asteroides) {
-            if (a.colideCom(nave)) return true;
+            if (a.colideCom(nave)) {
+                return true;
+            }
         }
 
         for (Inimigo i : inimigos) {
-            if (i.colideCom(nave)) return true;
+            if (i.colideCom(nave)) {
+                return true;
+            }
         }
 
         return false;
@@ -57,7 +61,7 @@ public class Missao {
 
     public void moverInimigos(Random r, int minX, int maxX, int minY, int maxY) {
         for (Inimigo i : inimigos) {
-            i.moverComChance(r, nave, minX, maxX, minY, maxY, 0.6);
+            i.moverComChance(r, nave, minX, maxX, minY, maxY, 0.60);
         }
     }
 

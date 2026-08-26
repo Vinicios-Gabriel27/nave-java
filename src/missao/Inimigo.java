@@ -19,17 +19,34 @@ public class Inimigo {
         return y;
     }
 
-
     private void moverAleatorio(Random r, int minX, int maxX, int minY, int maxY) {
         int direcao = r.nextInt(4);
+
         switch (direcao) {
-            case 0: if (y > minY) y--; break;
-            case 1: if (y < maxY) y++; break;
-            case 2: if (x > minX) x--; break;
-            case 3: if (x < maxX) x++; break;
+            case 0:
+                if (y > minY) {
+                    y--;
+                }
+                break;
+            case 1:
+                if (y < maxY) {
+                    y++;
+                }
+                break;
+            case 2:
+                if (x > minX) {
+                    x--;
+                }
+                break;
+            case 3:
+                if (x < maxX) {
+                    x++;
+                }
+                break;
+            default:
+                break;
         }
     }
-
 
     private void moverPerseguindo(Nave nave, int minX, int maxX, int minY, int maxY) {
         int diffX = nave.getX() - x;
@@ -58,8 +75,15 @@ public class Inimigo {
         }
     }
 
+    public void moverComChance(
+            Random r,
+            Nave nave,
+            int minX,
+            int maxX,
+            int minY,
+            int maxY,
+            double chancePerseguir) {
 
-    public void moverComChance(Random r, Nave nave, int minX, int maxX, int minY, int maxY, double chancePerseguir) {
         if (r.nextDouble() < chancePerseguir) {
             moverPerseguindo(nave, minX, maxX, minY, maxY);
         } else {

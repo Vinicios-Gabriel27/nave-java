@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/oo-console.iml" filepath="$PROJECT_DIR$/oo-console.iml" />
+      <module fileurl="file://$PROJECT_DIR$/nave-java.iml" filepath="$PROJECT_DIR$/nave-java.iml" />
     </modules>
   </component>
 </project>

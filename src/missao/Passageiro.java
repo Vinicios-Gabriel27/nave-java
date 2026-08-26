@@ -13,14 +13,23 @@ public class Passageiro {
         this.y = y;
     }
 
-    public String getNome() { return nome; }
-    public String getTipo() { return tipo; }
-    public int getX() { return x; }
-    public int getY() { return y; }
-
-
-    public int getPontuacao() {
-        return 10;  // Default
+    public String getNome() {
+        return nome;
     }
 
+    public String getTipo() {
+        return tipo;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public int getPontuacao() {
+        return 10;
+    }
 }

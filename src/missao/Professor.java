@@ -5,11 +5,8 @@ public class Professor extends Passageiro {
         super(nome, "Professor", x, y);
     }
 
-
     @Override
     public int getPontuacao() {
         return 10;
     }
 }
-
-
