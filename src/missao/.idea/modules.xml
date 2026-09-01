@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/nave-java-corrigido.iml" filepath="$PROJECT_DIR$/nave-java-corrigido.iml" />
+      <module fileurl="file://$PROJECT_DIR$/missao.iml" filepath="$PROJECT_DIR$/missao.iml" />
     </modules>
   </component>
 </project>
